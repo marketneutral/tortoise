@@ -1,4 +1,5 @@
-https://user-images.githubusercontent.com/16124573/56208830-0b850e00-6020-11e9-95c9-ced6d8c1adbf.png
+
+<img src="https://user-images.githubusercontent.com/16124573/56208830-0b850e00-6020-11e9-95c9-ced6d8c1adbf.png" width="400">
 
 # tortoise.ai
 
