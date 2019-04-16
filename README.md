@@ -1,5 +1,5 @@
 
-<img src="https://user-images.githubusercontent.com/16124573/56208830-0b850e00-6020-11e9-95c9-ced6d8c1adbf.png" width="400">
+<img src="(https://user-images.githubusercontent.com/16124573/56208993-7cc4c100-6020-11e9-84c4-21d15f778e54.jpg" width="400">
 
 # tortoise.ai
 
