@@ -1,15 +1,18 @@
 from .imports import *
 
 class TreeEnsemble():
-    def __init__(self, x, y, n_trees, sample_sz, min_leaf=5):
+    def __init__(self, x, y, n_trees, sample_sz, min_leaf=5, reg_coeff=None):
         np.random.seed(42)
         self.x,self.y,self.sample_sz,self.min_leaf = x,y,sample_sz,min_leaf
+        self.reg_coeff = reg_coeff
         self.trees = [self.create_tree() for i in range(n_trees)]
 
     def create_tree(self):
         idxs = np.random.permutation(len(self.y))[:self.sample_sz]
         return DecisionTree(self.x.iloc[idxs], self.y[idxs], 
-                    idxs=np.array(range(self.sample_sz)), min_leaf=self.min_leaf)
+                    idxs=np.array(range(self.sample_sz)),
+                            min_leaf=self.min_leaf,
+                            reg_coeff=self.reg_coeff)
         
     def predict(self, x):
         return np.mean([t.predict(x) for t in self.trees], axis=0)
@@ -17,9 +20,12 @@ class TreeEnsemble():
 def std_agg(cnt, s1, s2): return math.sqrt((s2/cnt) - (s1/cnt)**2)
 
 class DecisionTree():
-    def __init__(self, x, y, idxs, min_leaf=5):
+    def __init__(self, x, y, idxs, min_leaf=5, reg_coeff=None):
         self.x,self.y,self.idxs,self.min_leaf = x,y,idxs,min_leaf
         self.n,self.c = len(idxs), x.shape[1]
+        self.reg_coeff = reg_coeff
+        if reg_coeff is not None:
+            assert(self.c == len(reg_coeff))
         self.val = np.mean(y[idxs])
         self.score = float('inf')
         self.find_varsplit()
@@ -39,6 +45,10 @@ class DecisionTree():
         sort_y,sort_x = y[sort_idx], x[sort_idx]
         rhs_cnt,rhs_sum,rhs_sum2 = self.n, sort_y.sum(), (sort_y**2).sum()
         lhs_cnt,lhs_sum,lhs_sum2 = 0,0.,0.
+        if self.reg_coeff is not None:
+            lambda_i = self.regg_coeff[var_idx]
+        else:
+            lambda_i = 1.0
 
         for i in range(0,self.n-self.min_leaf):
             xi,yi = sort_x[i],sort_y[i]
@@ -51,8 +61,9 @@ class DecisionTree():
             lhs_std = std_agg(lhs_cnt, lhs_sum, lhs_sum2)
             rhs_std = std_agg(rhs_cnt, rhs_sum, rhs_sum2)
             curr_score = lhs_std*lhs_cnt + rhs_std*rhs_cnt
-            if curr_score<self.score: 
-                self.var_idx,self.score,self.split = var_idx,curr_score,xi
+            if (lambda_i*curr_score) < self.score: 
+                self.var_idx,self.score,self.split = \
+                   var_idx, curr_score*lambda_i, xi
 
     @property
     def split_name(self): return self.x.columns[self.var_idx]
